@@ -9,6 +9,7 @@ import { PaymentCard } from '@/components/PaymentCard';
 import { SettlementRow } from '@/components/SettlementRow';
 import { EmptyState } from '@/components/EmptyState';
 import { PrimaryButton } from '@/components/PrimaryButton';
+import { IconTile } from '@/components/IconTile';
 import { Toast } from '@/components/Toast';
 import { getGroup, getPayments, settleAllPayments } from '@/storage';
 import type { Group, Payment } from '@/types';
@@ -159,9 +160,12 @@ export default function GroupDetailScreen() {
       {/* 未精算サマリーカード */}
       <View style={styles.summaryWrap}>
         <View style={[styles.summaryCard, shadows.card]}>
-          <View>
-            <Text style={styles.summaryLabel}>未精算</Text>
-            <Text style={styles.summaryAmount}>{formatYen(total)}</Text>
+          <View style={styles.summaryLeft}>
+            <IconTile label={group.name} icon={group.icon} color={group.color} index={0} size={44} />
+            <View>
+              <Text style={styles.summaryLabel}>未精算</Text>
+              <Text style={styles.summaryAmount}>{formatYen(total)}</Text>
+            </View>
           </View>
         </View>
         <View style={styles.tabsWrap}>
@@ -308,6 +312,11 @@ function makeStyles(c: ColorPalette) {
       borderRadius: radius.card,
       paddingHorizontal: spacing.cardPad,
       paddingVertical: spacing.lg,
+    },
+    summaryLeft: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 13,
     },
     summaryRight: {
       alignItems: 'flex-end',

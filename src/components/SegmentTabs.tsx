@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { ColorPalette, fonts, radius } from '@/theme';
+import { ColorPalette, fonts, isLightColor, radius } from '@/theme';
 import { useTheme } from '@/context/ThemeContext';
 
 export interface SegmentTab {
@@ -82,7 +82,7 @@ function makeStyles(c: ColorPalette) {
       fontFamily: fonts.jp800,
       fontSize: 14,
       fontWeight: '800',
-      color: c.white,
+      color: isLightColor(c.fabBg) ? '#111111' : c.white,
     },
     labelInactive: {
       fontFamily: fonts.jp700,

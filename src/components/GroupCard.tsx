@@ -34,7 +34,7 @@ export function GroupCard({ group, index, onPress }: GroupCardProps) {
       accessibilityLabel={`グループ ${group.name}`}
     >
       <View style={styles.top}>
-        <IconTile label={group.name} index={index} size={48} />
+        <IconTile label={group.name} icon={group.icon} color={group.color} index={index} size={48} />
         <View style={styles.titleArea}>
           <Text style={styles.cardTitle} numberOfLines={1}>
             {group.name}

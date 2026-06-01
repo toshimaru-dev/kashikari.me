@@ -71,23 +71,23 @@ export const themes: Record<ThemeId, ColorPalette> = {
     iconTile: ['#2563EB', '#3B82F6', '#60A5FA'],
   },
   dark: {
-    primary: '#E0E0E0',
-    primaryDark: '#BDBDBD',
+    primary: '#FFFFFF',
+    primaryDark: '#E0E0E0',
     secondary: '#9E9E9E',
-    bg: '#111111',
-    surface: '#1C1C1C',
-    surfaceAlt: '#2A2A2A',
-    text: '#F0F0F0',
-    textSub: '#808080',
-    border: '#2E2E2E',
-    error: '#E57373',
-    success: '#A5A5A5',
-    pillBg: '#2A2A2A',
+    bg: '#000000',
+    surface: '#141414',
+    surfaceAlt: '#1F1F1F',
+    text: '#FFFFFF',
+    textSub: '#757575',
+    border: '#2A2A2A',
+    error: '#EF5350',
+    success: '#BDBDBD',
+    pillBg: '#1F1F1F',
     white: '#FFFFFF',
-    headerBg: '#1C1C1C',
-    headerText: '#F0F0F0',
-    fabBg: '#3A3A3A',
-    iconTile: ['#3A3A3A', '#4A4A4A', '#5A5A5A'],
+    headerBg: '#141414',
+    headerText: '#FFFFFF',
+    fabBg: '#FFFFFF',
+    iconTile: ['#1F1F1F', '#2A2A2A', '#383838'],
   },
   light: {
     primary: '#424242',
@@ -247,10 +247,25 @@ export function tileGlyphColor(c: ColorPalette, index: number): string {
   return isLightColor(bg) ? c.text : c.white;
 }
 
-/** アバター色のローテーション（テーマの iconTile を流用）。 */
-export function avatarColorForIndex(c: ColorPalette, index: number): { bg: string; fg: string } {
-  const bg = c.iconTile[index % c.iconTile.length];
-  return { bg, fg: isLightColor(bg) ? c.text : c.white };
+/**
+ * テーマに依存しない固定のマルチカラーパレット。
+ * どのテーマでもメンバーを色で識別できるよう、鮮やかで互いに区別しやすい色を使う。
+ */
+const AVATAR_COLORS = [
+  '#FF6B6B', // コーラル
+  '#2563EB', // ブルー
+  '#10B981', // グリーン
+  '#F59E0B', // アンバー
+  '#8B5CF6', // パープル
+  '#EC4899', // ピンク
+  '#06B6D4', // シアン
+  '#F97316', // オレンジ
+];
+
+/** アバター色のローテーション（テーマに依存しない固定マルチカラー）。 */
+export function avatarColorForIndex(_c: ColorPalette, index: number): { bg: string; fg: string } {
+  const bg = AVATAR_COLORS[index % AVATAR_COLORS.length];
+  return { bg, fg: '#FFFFFF' };
 }
 
 /** 簡易輝度判定（#RRGGBB）。明るい背景なら true。 */

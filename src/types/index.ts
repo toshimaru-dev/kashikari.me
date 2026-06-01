@@ -14,6 +14,10 @@ export interface Group {
   members: Member[];
   createdAt: number;
   updatedAt: number;
+  /** グループのテーマカラー（例: '#FF6B6B'）。未設定の既存データは normalizeGroup で補完される */
+  color: string;
+  /** グループのアイコン名（Ionicons、例: 'airplane-outline'）。未設定は normalizeGroup で補完される */
+  icon: string;
   /**
    * Sprint 2 以降で支払いを格納する。
    * Sprint 1 では空配列で初期化し、構造の後方互換を確保する。

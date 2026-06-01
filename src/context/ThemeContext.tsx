@@ -26,7 +26,7 @@ import {
 
 const THEME_STORAGE_KEY = 'kashikari.me/themeId';
 
-const VALID_THEME_IDS: ThemeId[] = ['green', 'blue', 'dark', 'coral'];
+const VALID_THEME_IDS: ThemeId[] = ['green', 'blue', 'light', 'dark', 'coral'];
 
 function isThemeId(value: unknown): value is ThemeId {
   return typeof value === 'string' && (VALID_THEME_IDS as string[]).includes(value);
@@ -73,12 +73,20 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   const value = useMemo<ThemeContextValue>(() => {
     const palette = themes[themeId];
+    const isDark = themeId === 'dark';
+    // ダークテーマはシャドウなし（elevation で浮かせず border で区別するマテリアルスタイル）
+    const flatShadows: ThemeShadows = {
+      card:      { shadowOpacity: 0, elevation: 0 },
+      fab:       { shadowOpacity: 0, elevation: 0 },
+      emptyIcon: { shadowOpacity: 0, elevation: 0 },
+      header:    { shadowOpacity: 0, elevation: 0 },
+    };
     return {
       themeId,
       colors: palette,
       gradients: makeGradients(palette),
-      shadows: makeShadows(palette),
-      isDark: themeId === 'dark',
+      shadows: isDark ? flatShadows : makeShadows(palette),
+      isDark,
       setTheme,
     };
   }, [themeId, setTheme]);

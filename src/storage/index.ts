@@ -5,6 +5,7 @@
  */
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { AppData, Group, Member, Payment } from '@/types';
+import { DEFAULT_GROUP_COLOR, DEFAULT_GROUP_ICON } from '@/utils/groupPresets';
 
 const STORAGE_KEY = 'kashikari.me/appData';
 const CURRENT_VERSION = 1;
@@ -73,29 +74,39 @@ function normalizePayment(raw: unknown): Payment | null {
   };
 }
 
+/**
+ * 単一グループの生データを現行スキーマへ正規化する（後方互換確保）。
+ * color/icon 未設定の既存グループはデフォルト値で補完し、データが壊れないようにする。
+ */
+function normalizeGroup(raw: unknown): Group | null {
+  if (!raw || typeof raw !== 'object') return null;
+  const g = raw as Record<string, unknown>;
+  return {
+    id: typeof g.id === 'string' ? g.id : generateId(),
+    name: typeof g.name === 'string' ? g.name : '',
+    members: Array.isArray(g.members)
+      ? g.members
+          .filter((m): m is Member => !!m && typeof m === 'object')
+          .map((m) => ({ id: m.id ?? generateId(), name: m.name ?? '' }))
+      : [],
+    createdAt: typeof g.createdAt === 'number' ? g.createdAt : Date.now(),
+    updatedAt: typeof g.updatedAt === 'number' ? g.updatedAt : Date.now(),
+    color: typeof g.color === 'string' && g.color ? g.color : DEFAULT_GROUP_COLOR,
+    icon: typeof g.icon === 'string' && g.icon ? g.icon : DEFAULT_GROUP_ICON,
+    payments: Array.isArray(g.payments)
+      ? g.payments.map(normalizePayment).filter((p): p is Payment => p !== null)
+      : [],
+  };
+}
+
 /** 読み込んだ生データを現行スキーマへ正規化する（後方互換確保） */
 function normalize(raw: unknown): AppData {
   if (!raw || typeof raw !== 'object') return emptyData();
   const data = raw as Partial<AppData>;
   const groups = Array.isArray(data.groups) ? data.groups : [];
   const normalizedGroups: Group[] = groups
-    .filter((g): g is Group => !!g && typeof g === 'object')
-    .map((g) => ({
-      id: g.id ?? generateId(),
-      name: typeof g.name === 'string' ? g.name : '',
-      members: Array.isArray(g.members)
-        ? g.members
-            .filter((m): m is Member => !!m && typeof m === 'object')
-            .map((m) => ({ id: m.id ?? generateId(), name: m.name ?? '' }))
-        : [],
-      createdAt: typeof g.createdAt === 'number' ? g.createdAt : Date.now(),
-      updatedAt: typeof g.updatedAt === 'number' ? g.updatedAt : Date.now(),
-      payments: Array.isArray(g.payments)
-        ? g.payments
-            .map(normalizePayment)
-            .filter((p): p is Payment => p !== null)
-        : [],
-    }));
+    .map(normalizeGroup)
+    .filter((g): g is Group => g !== null);
   return { version: CURRENT_VERSION, groups: normalizedGroups };
 }
 
@@ -129,6 +140,10 @@ export async function getGroup(id: string): Promise<Group | undefined> {
 export interface GroupInput {
   name: string;
   members: { id?: string; name: string }[];
+  /** グループカラー（省略時はデフォルトカラー） */
+  color?: string;
+  /** グループアイコン（省略時はデフォルトアイコン） */
+  icon?: string;
 }
 
 export async function createGroup(input: GroupInput): Promise<Group> {
@@ -143,6 +158,8 @@ export async function createGroup(input: GroupInput): Promise<Group> {
     })),
     createdAt: now,
     updatedAt: now,
+    color: input.color ?? DEFAULT_GROUP_COLOR,
+    icon: input.icon ?? DEFAULT_GROUP_ICON,
     payments: [],
   };
   data.groups.push(group);
@@ -162,6 +179,8 @@ export async function updateGroup(id: string, input: GroupInput): Promise<Group 
       id: m.id ?? generateId(),
       name: m.name.trim(),
     })),
+    color: input.color ?? existing.color ?? DEFAULT_GROUP_COLOR,
+    icon: input.icon ?? existing.icon ?? DEFAULT_GROUP_ICON,
     updatedAt: Date.now(),
   };
   data.groups[idx] = updated;

@@ -770,3 +770,71 @@
   7. 精算済みタブ: 精算した支払いが新しい順に表示。支払いタブからは消えている。精算タブは「精算する貸し借りはありません」になる。
   8. サマリーカードの総支出が、精算後は未精算（残っている分）の合計に更新される。
   9. 回帰確認: グループ作成/編集/削除、支払い追加/編集/削除、精算結果の共有が従来どおり動作。
+
+---
+
+## 追加機能: グループのカラー・アイコン設定
+**ステータス:** 実装完了 - 評価待ち
+**実装日:** 2026-06-01
+
+### 実装内容
+- **Group 型に color・icon を追加**（`src/types/index.ts`）: `color: string`（例 '#FF6B6B'）と `icon: string`（Ionicons 名、例 'airplane-outline'）を必須プロパティとして追加。
+- **プリセット定数を新規作成**（`src/utils/groupPresets.ts`）: テーマ非依存の `GROUP_COLORS`（8色）と `GROUP_ICONS`（16種・日本語ラベル付き Ionicons）、および `DEFAULT_GROUP_COLOR`（'#FF6B6B'）・`DEFAULT_GROUP_ICON`（'people-outline'）をエクスポート。
+- **GroupForm にカラー・アイコン選択 UI を追加**（`src/components/GroupForm.tsx`）: グループ名入力の後に「カラー」（横スクロールのカラーサークル列、選択中は白チェック＋リング強調）と「アイコン」（4列グリッド、各タイルは選択中カラーの角丸スクエア背景＋白アイコン、選択中は枠＋影で強調）を配置。`GroupFormInitial` に `color?`/`icon?` を追加。`onSave` に `color`・`icon` を含めて渡す（既存の members ハンドリングは維持）。
+- **IconTile をアイコン対応に拡張**（`src/components/IconTile.tsx`）: `icon?`（Ionicons 名）・`color?`（背景色）プロップを追加。`icon` 指定時は Ionicons をアイコン色 白固定で表示、未指定時は従来通り先頭1文字。`color` 指定時はその色を背景に、未指定時はテーマ iconTile 色をローテーション。アイコンサイズは size の 50%。
+- **GroupCard で group.color・group.icon を使用**（`src/components/GroupCard.tsx`）: `IconTile` に `icon={group.icon}` `color={group.color}` を渡し、グループごとの色・アイコンを一覧で表示。
+- **ストレージの正規化を更新**（`src/storage/index.ts`）: 既存の inline map を `normalizeGroup()` ヘルパーに抽出し、`color: raw.color ?? DEFAULT_GROUP_COLOR` / `icon: raw.icon ?? DEFAULT_GROUP_ICON` でデフォルト補完（空文字・非文字列もフォールバック）。`GroupInput` に `color?`/`icon?` を追加し、`createGroup`/`updateGroup` で保存。既存グループ（color/icon 未設定）はデフォルト補完されデータが壊れない。
+- **グループ詳細のサマリーカードに IconTile を追加**（`app/group/[id]/index.tsx`）: 未精算サマリーカード左端に `group.color`・`group.icon` の IconTile（size 44）を表示。
+- **編集画面で初期値を引き渡し**（`app/group/[id]/edit.tsx`）: `GroupFormInitial` に `color`・`icon` を渡し、編集時に現在のカラー・アイコンが選択済みで表示される。
+- **ユニットテスト追加**（`__tests__/group-color-icon.test.js`）: プリセット件数・デフォルト値・16進カラー・id 一意性・normalize の color/icon デフォルト補完（後方互換）・指定値保持・不正値フォールバックを7ケースで検証。
+
+### 自己評価
+
+| 基準 | スコア (1-5) | コメント |
+|------|-------------|---------|
+| 機能完全性 | 5 | 変更1〜7（型・プリセット・選択UI・IconTile拡張・GroupCard・normalize・詳細ヘッダー）を全て実装。新規/編集の両フローで color・icon を保存・反映 |
+| コード品質 | 5 | `normalizeGroup` 抽出で normalize を簡潔化。`useTheme()`/`makeStyles(c)` パターン維持。プリセットを単一ソース化（DRY）。tsc エラー0 |
+| UI/UX | 4 | カラーは横スクロール＋選択リング、アイコンは4列グリッド＋選択カラー背景＋影。選択カラー変更でアイコン背景も即追従。実機見た目は Evaluator 確認待ち |
+| エラーハンドリング | 4 | normalize で空文字・非文字列・欠損をデフォルトへフォールバック。既存データ後方互換を確保。Ionicons 名は型キャストで glyphMap に整合 |
+| 既存機能との統合 | 5 | storage/payment/direct-settlement テスト全合格・回帰なし。web バンドル945 modules で正常コンパイル。sprint5 の1件失敗は本変更前から存在する既知の事象（精算共有テキスト）で本機能と無関係 |
+
+### 技術的な判断
+- **`onSave` の型は GroupInput を拡張**: spec の GroupForm props 例は `onSave: (data: { name; color; icon }) => void` だが、既存フォームは members も扱う（最低2名バリデーション込み）。members を落とすと回帰するため、`GroupInput` を `color?`/`icon?` で拡張し members を維持したまま color/icon を追加。new.tsx/edit.tsx の `createGroup`/`updateGroup` 連携も型変更なしで成立。
+- **`normalizeGroup()` を抽出**: spec が「normalizeGroup を更新」と指示するが、既存コードは normalize 内の inline map だった。同等の挙動を保ちつつ単一グループ正規化関数として切り出し、color/icon 補完を追加。これで spec の指示に沿いつつ可読性も向上。
+- **詳細画面サマリーへ IconTile 追加**: 詳細画面は元々 IconTile 未使用だった（サマリーは金額のみ）。spec 変更7の意図（詳細でも色・アイコンを示す）に沿い、サマリーカード左端に size44 の IconTile を追加。index=0 だが color 指定があるため group.color が優先される。
+- **選択強調の影は Platform.select**: web では `boxShadow`、native では `shadow*`/`elevation` で実装し、どちらでも選択リング・影が出るようにした。カラーサークルの選択は白枠＋外側に text 色のリング（テーマ背景上でも視認可能）。
+- **アイコン色は白固定**: spec 指示通り Ionicons の色を `#FFFFFF` 固定とし、どのプリセットカラー背景でもコントラストを確保。
+
+### 既知の課題
+- **favicon の jimp-compact Crc error**（Sprint 1 から継続の Minor 警告）: web バンドル本体（945 modules）の正常コンパイルには影響なし。
+- **sprint5.test.js の "has header line" 1件失敗**: 本変更前から存在する既知事象（精算共有テキストのヘッダー判定）。color/icon 機能とは無関係で、本変更による回帰ではない。
+
+### Evaluator への引き渡し事項
+
+- **起動方法（Web・推奨）:**
+  ```bash
+  cd /Users/toshiki-kojima/my-project/kashikari-me-beta
+  npx expo start --web
+  # ブラウザで http://localhost:8081 を開く
+  ```
+  - 依存追加なし（既存構成のまま）。未インストール時のみ `npm install`。
+
+- **ユニットテスト:**
+  ```bash
+  cd /Users/toshiki-kojima/my-project/kashikari-me-beta
+  node __tests__/group-color-icon.test.js  # カラー・アイコン（7ケース）
+  node __tests__/storage.test.js           # 回帰（8）
+  node __tests__/payment.test.js           # 回帰
+  npx tsc --noEmit                         # 型チェック（エラー0）
+  ```
+
+- **テスト対象 URL:** `http://localhost:8081`（Web）。ホーム = ルート。新規グループ = `/group/new`。グループ詳細 = `/group/[id]`。編集 = `/group/[id]/edit`。
+
+- **テストシナリオ（カラー・アイコン）:**
+  1. ホームの「新規グループ」→ `/group/new`。グループ名入力欄の下に「カラー」（8色の横スクロールサークル）と「アイコン」（16種の4列グリッド）が表示される。初期選択はカラー=コーラル（#FF6B6B）、アイコン=people-outline。
+  2. カラーで「ブルー」をタップ → そのサークルに白チェック＋リングが付き、アイコングリッドの全タイル背景が即座にブルーへ変わる。
+  3. アイコンで「旅行（airplane-outline）」をタップ → そのタイルに枠＋影が付き選択される。
+  4. グループ名・メンバー2名を入力して保存 → ホームのグループカード左端のアイコンタイルが、選んだブルー背景＋飛行機アイコンで表示される。
+  5. そのグループを開く → 詳細のサマリーカード左端にも同じ色・アイコンのタイルが表示される。
+  6. 「編集」→ 編集画面でカラー=ブルー・アイコン=旅行が選択済みで開く。別の色・アイコンに変更して保存 → 一覧・詳細に反映される。
+  7. 回帰確認: 既存グループ（color/icon 未設定で作られたデータがあれば）もデフォルト（コーラル＋people-outline）で表示され、開く・編集・削除・支払い追加が従来どおり動作する。

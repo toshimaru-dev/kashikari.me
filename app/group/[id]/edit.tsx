@@ -32,6 +32,8 @@ export default function EditGroupScreen() {
         setInitial({
           name: group.name,
           members: group.members.map((m) => ({ id: m.id, name: m.name })),
+          color: group.color,
+          icon: group.icon,
         });
       });
       return () => {

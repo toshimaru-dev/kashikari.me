@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View, ViewStyle } from 'react-native';
 
 import { Ionicons } from '@expo/vector-icons';
-import { ColorPalette, fonts, radius } from '@/theme';
+import { ColorPalette, fonts, isLightColor, radius } from '@/theme';
 import { useTheme } from '@/context/ThemeContext';
 
 interface PrimaryButtonProps {
@@ -17,6 +17,8 @@ interface PrimaryButtonProps {
 export function PrimaryButton({ label, onPress, withPlus = false, style }: PrimaryButtonProps) {
   const { colors, shadows } = useTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
+  // ボタン背景が明るい場合（ダークテーマの白ボタン等）はテキストを暗色にする
+  const labelColor = isLightColor(colors.fabBg) ? '#111111' : colors.white;
   return (
     <Pressable
       onPress={onPress}
@@ -26,9 +28,9 @@ export function PrimaryButton({ label, onPress, withPlus = false, style }: Prima
     >
       <View style={[styles.button, shadows.fab]}>
         {withPlus ? (
-          <Ionicons name="add" size={22} color={colors.white} style={styles.plus} />
+          <Ionicons name="add" size={22} color={labelColor} style={styles.plus} />
         ) : null}
-        <Text style={styles.label}>{label}</Text>
+        <Text style={[styles.label, { color: labelColor }]}>{label}</Text>
       </View>
     </Pressable>
   );
