@@ -1,5 +1,60 @@
 # 実装進捗・自己評価
 
+## 追加機能: 設定画面のアプリ情報・フィードバックセクション
+**ステータス:** 実装完了 - 評価待ち
+**実装日:** 2026-06-02
+
+### 実装内容
+- **依存追加**: `npx expo install expo-web-browser expo-constants expo-mail-composer`（SDK 54 互換版）。メール起動は指示どおり `Linking.openURL` を採用したため `expo-mail-composer` は import せず未使用（プラグインのみ登録）。
+- **利用規約ページ作成**（`docs/terms-of-use.html` 新規）: `docs/privacy-policy.html` と同一デザイン（同じ CSS・コーラルヘッダー・最終更新日2026年6月1日）。日本語で「サービスの概要 / 利用条件 / 禁止事項 / 免責事項 / 著作権 / 改定について / お問い合わせ（kashikari.me.26@gmail.com）」を記載。フッターから `index.html` へ戻るリンク付き。
+- **トップページ更新**（`docs/index.html`）: 既存のプライバシーポリシー／お問い合わせの間に「利用規約」リンクボタン（`link-secondary`・`terms-of-use.html`）を追加。
+- **設定画面の更新**（`app/settings.tsx`）: 既存「テーマカラー」セクション（テーマ選択カード）は一切変更せず、その下に2セクションを追加。
+  - **アプリ情報**: バージョン行（`information-circle-outline` + 右に `Constants.expoConfig?.version ?? '1.0.0'` のテキスト・矢印なし）、利用規約行（`document-text-outline` + `chevron-forward`・タップで in-app ブラウザ）、プライバシーポリシー行（`lock-closed-outline` + `chevron-forward`・タップで in-app ブラウザ）。
+  - **フィードバック**: お問い合わせ行（`mail-outline` + `chevron-forward`・タップで `mailto:` 起動、subject=`[Kashikari.me] お問い合わせ`）。
+  - リスト行スタイル: 高さ52px・`c.surface` 背景・`radius.card`（22）角丸・`shadows.card`・左アイコン枠28px・行ラベル `fonts.jp700`・右値 `fonts.jp500`。`useTheme()` の `colors` で全色テーマ追従。
+- **URL**: 利用規約 `https://frisk1995.github.io/kashikari-me-beta/terms-of-use.html`、プライバシーポリシー `https://frisk1995.github.io/kashikari-me-beta/privacy-policy.html`。
+- **WebBrowser**: `WebBrowser.openBrowserAsync(url, { presentationStyle: WebBrowser.WebBrowserPresentationStyle.PAGE_SHEET })`。失敗時は `Linking.openURL(url)` にフォールバック。
+
+### 自己評価
+
+| 基準 | スコア (1-5) | コメント |
+|------|-------------|---------|
+| 機能完全性 | 5 | 利用規約HTML作成・index.html リンク追加・アプリ情報セクション（バージョン/利用規約/プライバシー）・フィードバックセクション（お問い合わせ）の全項目を実装。tsc エラー0 |
+| コード品質 | 5 | 定数（URL/メール/subject）と openUrl/openMail ハンドラをモジュールトップに集約。既存 `makeStyles(c)` ファクトリパターン・`useTheme()` を踏襲。リスト行スタイルを共通化 |
+| UI/UX | 4 | セクションラベル流用・52px リスト行・左Ionicons・右chevron/値テキスト。テーマ追従。実機の見た目は Evaluator 確認待ち |
+| エラーハンドリング | 4 | WebBrowser 失敗時に Linking フォールバック、Linking は `.catch()` で握りつぶし（クラッシュ防止）。バージョン未取得時は '1.0.0' デフォルト |
+| 既存機能との統合 | 5 | テーマ選択UIは未変更。`shadows`・`colors` を既存 useTheme から取得。tsc 0。回帰なし |
+
+### 技術的な判断
+- **メール起動は `Linking.openURL` を採用**: 指示どおり `expo-mail-composer` は使わず `mailto:` スキームで OS 標準メーラーを起動。`expo-mail-composer` はインストールのみ（指示のパッケージ要件を満たすため）で import せず、将来の差し替え余地として残置。
+- **WebBrowser 失敗時のフォールバック**: in-app ブラウザが利用できない環境（一部 Web 等）でも規約・ポリシーを開けるよう `Linking.openURL` にフォールバック。
+- **バージョンは `Constants.expoConfig?.version`**: `app.json` の `expo.version`（現在 1.0.0）を参照。ハードコードせず将来のバージョン更新に追従。
+- **利用規約HTMLはプライバシーポリシーと完全同一デザイン**: CSS を流用しトーン・最終更新日を揃え、GitHub Pages 上で統一感を確保。
+
+### 既知の課題
+- `expo-mail-composer` はインストール済みだが未 import（`Linking` 方式のため）。バンドルサイズへの影響は軽微。
+- in-app ブラウザ（PAGE_SHEET）は iOS ネイティブで最適。Web（`localhost:8081`）では新規タブ/同タブ遷移になる（プラットフォーム差・想定内）。
+
+### Evaluator への引き渡し事項
+- **起動方法（Web）:**
+  ```bash
+  cd /Users/toshiki-kojima/my-project/kashikari-me-beta
+  npx expo start --web
+  # ブラウザで http://localhost:8081 を開く
+  ```
+  - 依存追加あり（`expo-web-browser` / `expo-constants` / `expo-mail-composer`）。`npm install` 済み。未インストール時は `npx expo install expo-web-browser expo-constants expo-mail-composer`。
+- **型チェック:** `npx tsc --noEmit`（エラー0）。
+- **テスト対象 URL:** `http://localhost:8081/settings`（ホーム右上の歯車からも遷移可）。HTML は `docs/terms-of-use.html` / `docs/privacy-policy.html` / `docs/index.html`。
+- **テストシナリオ:**
+  1. ホーム右上の歯車 → 設定画面。「テーマカラー」セクション（既存・5カード）が従来どおり表示・切替できること（回帰）。
+  2. テーマカラーの下に「アプリ情報」セクション。バージョン行に「バージョン」「1.0.0」が表示され矢印が無いこと。
+  3. 「利用規約」行をタップ → in-app ブラウザ（Web では遷移）で利用規約ページが開くこと。「プライバシーポリシー」行も同様にポリシーページが開くこと。
+  4. 「フィードバック」セクションの「お問い合わせ」行をタップ → メーラーが起動し、宛先 `kashikari.me.26@gmail.com`・件名 `[Kashikari.me] お問い合わせ` がプリフィルされること。
+  5. テーマを「ダーク」等に切り替えても、追加した行（背景/文字/アイコン/値）が判読可能にテーマ追従すること。
+  6. `docs/index.html` に「利用規約」リンクが追加され、`terms-of-use.html` がプライバシーポリシーと同デザインで表示されること。
+
+---
+
 ## 追加機能: テーマ切り替え機能と設定画面
 **ステータス:** 実装完了 - 評価待ち
 **実装日:** 2026-05-31
