@@ -8,14 +8,13 @@
 import { initializeApp, getApps, type FirebaseApp } from 'firebase/app';
 import { getFirestore, type Firestore } from 'firebase/firestore';
 
-// TODO: Firebase コンソール > プロジェクト設定 > マイアプリ > SDK の設定と構成 からコピーして貼り付ける
 const firebaseConfig = {
-  apiKey: 'YOUR_API_KEY',
-  authDomain: 'YOUR_AUTH_DOMAIN',
-  projectId: 'YOUR_PROJECT_ID',
-  storageBucket: 'YOUR_STORAGE_BUCKET',
-  messagingSenderId: 'YOUR_MESSAGING_SENDER_ID',
-  appId: 'YOUR_APP_ID',
+  apiKey: 'AIzaSyAyx2Jg2-MqinVGy1SwZ-WjEjzV1slOEuk',
+  authDomain: 'kashikari-me-d5fdf.firebaseapp.com',
+  projectId: 'kashikari-me-d5fdf',
+  storageBucket: 'kashikari-me-d5fdf.firebasestorage.app',
+  messagingSenderId: '259048619769',
+  appId: '1:259048619769:web:c2e1659a46b84dd43a6c28',
 };
 
 /** config が placeholder のままかどうか（未設定判定） */
