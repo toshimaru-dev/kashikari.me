@@ -6,24 +6,18 @@
  * Firestore 未設定・接続失敗時もアプリを止めないよう書き込みは best-effort で行う。
  */
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as Crypto from 'expo-crypto';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/firebase/config';
 
 const USER_ID_KEY = 'kashikari.me/userId';
 
-/** UUID を生成する（expo-crypto が使えない環境ではフォールバック） */
+/** RFC 4122 v4 UUID を純粋 JS で生成（ネイティブモジュール不要） */
 function generateUuid(): string {
-  try {
-    return Crypto.randomUUID();
-  } catch {
-    // フォールバック: 簡易 UUID v4 風
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-      const r = (Math.random() * 16) | 0;
-      const v = c === 'x' ? r : (r & 0x3) | 0x8;
-      return v.toString(16);
-    });
-  }
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === 'x' ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
 }
 
 /**
