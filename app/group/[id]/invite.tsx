@@ -4,7 +4,7 @@
  * 「カメラで読み取る」ボタンでスキャナー画面（/scan）へ遷移する。
  */
 import { useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Clipboard, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -47,6 +47,13 @@ export default function InviteScreen() {
   }, [id]);
 
   const joinUrl = id ? `kashikarime://join/${id}` : '';
+  const [copied, setCopied] = useState(false);
+
+  const copyUrl = () => {
+    Clipboard.setString(joinUrl);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   if (!loaded) {
     return (
@@ -97,6 +104,23 @@ export default function InviteScreen() {
             backgroundColor={colors.surface}
           />
         </View>
+
+        {/* URLコピーボタン（シミュレーター検証・QR非対応時に使用） */}
+        <Pressable
+          onPress={copyUrl}
+          style={({ pressed }) => [styles.copyButton, { opacity: pressed ? 0.85 : 1 }]}
+          accessibilityRole="button"
+          accessibilityLabel="招待URLをコピー"
+        >
+          <Ionicons
+            name={copied ? 'checkmark-outline' : 'copy-outline'}
+            size={18}
+            color={colors.primary}
+          />
+          <Text style={styles.copyLabel}>
+            {copied ? 'コピーしました' : '招待URLをコピー'}
+          </Text>
+        </Pressable>
 
         <Text style={styles.urlLabel} selectable>
           {joinUrl}
@@ -165,6 +189,24 @@ function makeStyles(c: ColorPalette) {
       color: c.textSub,
       textAlign: 'center',
       marginTop: spacing.lg,
+    },
+    copyButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 6,
+      height: 44,
+      borderRadius: 14,
+      borderWidth: 1.5,
+      borderColor: c.primary,
+      alignSelf: 'stretch',
+      marginTop: spacing.xl,
+    },
+    copyLabel: {
+      fontFamily: fonts.jp700,
+      fontSize: 14,
+      fontWeight: '700',
+      color: c.primary,
     },
     scanButton: {
       flexDirection: 'row',
