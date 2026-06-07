@@ -1,14 +1,28 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
+import {
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { HomeHeader } from '@/components/Header';
 import { GroupCard } from '@/components/GroupCard';
 import { EmptyState } from '@/components/EmptyState';
-import { PrimaryButton } from '@/components/PrimaryButton';
+import { PrimaryButton, SecondaryButton } from '@/components/PrimaryButton';
 import { subscribeGroups, subscribePayments } from '@/storage/firestore';
+import { parseJoinUrl } from '@/utils/joinUrl';
+import { usePurchase, FREE_GROUP_LIMIT } from '@/context/PurchaseContext';
 import type { Group } from '@/types';
-import { ColorPalette, fonts, spacing } from '@/theme';
+import { ColorPalette, fonts, radius, spacing } from '@/theme';
 import { useTheme } from '@/context/ThemeContext';
 import { useUser } from '@/context/UserContext';
 
@@ -17,6 +31,7 @@ export default function HomeScreen() {
   const { colors } = useTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const { userId, loading: userLoading } = useUser();
+  const { isPremium } = usePurchase();
 
   const [groups, setGroups] = useState<Group[]>([]);
   const [loaded, setLoaded] = useState(false);
@@ -72,6 +87,28 @@ export default function HomeScreen() {
     };
   }, []);
 
+  const [joinModalVisible, setJoinModalVisible] = useState(false);
+  const [joinInput, setJoinInput] = useState('');
+  const [joinError, setJoinError] = useState('');
+
+  const handleJoin = () => {
+    const groupId = parseJoinUrl(joinInput);
+    if (!groupId) {
+      setJoinError('有効な招待URLを入力してください');
+      return;
+    }
+    setJoinModalVisible(false);
+    setJoinInput('');
+    setJoinError('');
+    router.push(`/join/${groupId}`);
+  };
+
+  const closeJoinModal = () => {
+    setJoinModalVisible(false);
+    setJoinInput('');
+    setJoinError('');
+  };
+
   const showLoading = userLoading || (!loaded && !!userId);
   const isEmpty = loaded && groups.length === 0;
 
@@ -115,12 +152,65 @@ export default function HomeScreen() {
       </ScrollView>
 
       <View style={[styles.fabWrap, { paddingBottom: insets.bottom + 12 }]} pointerEvents="box-none">
+        <SecondaryButton
+          label="グループに参加"
+          onPress={() => setJoinModalVisible(true)}
+        />
         <PrimaryButton
           label="新規グループ"
           withPlus
-          onPress={() => router.push('/group/new')}
+          onPress={() => {
+            if (!isPremium && groups.length >= FREE_GROUP_LIMIT) {
+              router.push('/paywall');
+            } else {
+              router.push('/group/new');
+            }
+          }}
         />
       </View>
+
+      <Modal
+        visible={joinModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={closeJoinModal}
+      >
+        <Pressable style={styles.modalOverlay} onPress={closeJoinModal}>
+          <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+            <Pressable style={[styles.modalCard, { backgroundColor: colors.surface }]} onPress={() => {}}>
+              <View style={styles.modalHeader}>
+                <Ionicons name="link-outline" size={24} color={colors.primary} />
+                <Text style={[styles.modalTitle, { color: colors.text }]}>招待URLで参加</Text>
+              </View>
+              <Text style={[styles.modalBody, { color: colors.textSub }]}>
+                招待者から受け取ったURLを貼り付けてください。
+              </Text>
+              <TextInput
+                style={[
+                  styles.modalInput,
+                  {
+                    borderColor: joinError ? colors.error : colors.border,
+                    backgroundColor: colors.bg,
+                    color: colors.text,
+                  },
+                ]}
+                placeholder="kashikarime://join/..."
+                placeholderTextColor={colors.textSub}
+                value={joinInput}
+                onChangeText={(t) => { setJoinInput(t); setJoinError(''); }}
+                autoCapitalize="none"
+                autoCorrect={false}
+                returnKeyType="go"
+                onSubmitEditing={handleJoin}
+                autoFocus
+              />
+              {joinError ? <Text style={[styles.modalError, { color: colors.error }]}>{joinError}</Text> : null}
+              <PrimaryButton label="参加する" onPress={handleJoin} style={styles.modalBtn} />
+              <SecondaryButton label="キャンセル" onPress={closeJoinModal} style={styles.modalCancelBtn} />
+            </Pressable>
+          </KeyboardAvoidingView>
+        </Pressable>
+      </Modal>
     </View>
   );
 }
@@ -155,6 +245,53 @@ function makeStyles(c: ColorPalette) {
       left: spacing.screenH,
       right: spacing.screenH,
       bottom: 0,
+      gap: spacing.sm,
+    },
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0,0,0,0.45)',
+      justifyContent: 'flex-end',
+    },
+    modalCard: {
+      borderTopLeftRadius: radius.card,
+      borderTopRightRadius: radius.card,
+      paddingHorizontal: spacing.screenH,
+      paddingTop: spacing.xl,
+      paddingBottom: spacing.xl,
+      gap: spacing.md,
+    },
+    modalHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+    },
+    modalTitle: {
+      fontFamily: fonts.jp800,
+      fontSize: 18,
+      fontWeight: '800',
+    },
+    modalBody: {
+      fontFamily: fonts.jp500,
+      fontSize: 13,
+      lineHeight: 20,
+    },
+    modalInput: {
+      height: 48,
+      borderWidth: 1.5,
+      borderRadius: 14,
+      paddingHorizontal: 14,
+      fontFamily: fonts.jp500,
+      fontSize: 14,
+    },
+    modalError: {
+      fontFamily: fonts.jp500,
+      fontSize: 12,
+    },
+    modalBtn: {
+      marginTop: spacing.sm,
+    },
+    modalCancelBtn: {
+      marginTop: spacing.xs,
     },
   });
 }

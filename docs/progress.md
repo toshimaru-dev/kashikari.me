@@ -966,3 +966,73 @@
   5. そのグループを開く → 詳細のサマリーカード左端にも同じ色・アイコンのタイルが表示される。
   6. 「編集」→ 編集画面でカラー=ブルー・アイコン=旅行が選択済みで開く。別の色・アイコンに変更して保存 → 一覧・詳細に反映される。
   7. 回帰確認: 既存グループ（color/icon 未設定で作られたデータがあれば）もデフォルト（コーラル＋people-outline）で表示され、開く・編集・削除・支払い追加が従来どおり動作する。
+
+---
+
+## 追加機能（Sprint 5 合格後の実装）
+**ステータス:** 実装完了 - 評価待ち
+**実装日:** 2026-06-05
+
+### 実装内容
+
+#### Firebase 匿名認証（Anonymous Auth）
+- `src/firebase/config.ts`: `initializeAuth` + `getReactNativePersistence(AsyncStorage)` でUID永続化
+- `src/context/UserContext.tsx`: `onAuthStateChanged` + `signInAnonymously` に切り替え。auth未使用時はローカルUUIDにフォールバック
+- `firestore.rules`: `request.auth` を使ったセキュリティルールに更新。グループ参加フローの `allow update` に自己追加ルールを追加
+
+#### グループ参加フロー改善
+- `app/index.tsx`: 「グループに参加」ボタン + 招待URL貼り付けモーダルをトップ画面に追加
+- `app/scan.tsx`: Expo Go フォールバックをホーム画面への誘導メッセージに変更
+- `src/storage/firestore.ts`: `subscribeGroups` を `where('participantIds', 'array-contains', userId)` クエリに最適化（全件取得→フィルタから変更）
+
+#### フリーミアム課金基盤
+- `src/context/PurchaseContext.tsx`: 課金状態管理 Context（現在はAsyncStorageモック）
+  - 無料制限: グループ1個、メンバー3人/グループ
+- `app/paywall.tsx`: ペイウォール画面（機能比較、¥300/月）
+- `app/index.tsx`: グループ1個超でペイウォールへ誘導
+- `src/components/GroupForm.tsx`: メンバー3人超でアップグレードAlert
+- `app/settings.tsx`: プランセクション追加（フリー/プレミアム表示）
+- `app/_layout.tsx`: `PurchaseProvider` 追加、`paywall` 画面をルートに登録
+
+#### カレンダー日付選択
+- `@react-native-community/datetimepicker` を追加（Expo Go対応）
+- `src/components/PaymentForm.tsx`: 日付入力をカレンダー選択式に変更
+  - iOS/Android: 日付ボタン → タップでモーダルカレンダー表示
+  - Web: 既存の `<input type="date">` を維持
+
+### 起動方法
+```bash
+npx expo start --go
+# または
+npx expo start --web --port 8081
+```
+
+### テストシナリオ（追加機能）
+
+1. **グループ参加フロー**
+   - トップ画面の「グループに参加」ボタンをタップ
+   - モーダルが開き、招待URLの入力欄が表示される
+   - 無効なURLを入力→エラー表示「有効な招待URLを入力してください」
+   - 有効なURL（`kashikarime://join/{groupId}` 形式）を入力→参加処理
+
+2. **フリーミアム制限**
+   - グループが1個ある状態で「新規グループ」をタップ→ペイウォール画面へ遷移
+   - ペイウォール画面：機能比較リスト、¥300/月の価格表示
+   - 開発用「プレミアムをONにする」ボタンで制限解除確認
+   - プレミアムON後：グループを複数作成できる
+   - グループフォームでメンバー3人を超えようとするとAlertが表示
+
+3. **カレンダー日付選択**
+   - 支払い追加画面を開く
+   - 「借りた日付」欄に現在日付を表示したボタンが表示される
+   - ボタンをタップするとモーダルでカレンダーが開く
+   - 日付を選択して「決定」→ボタンの表示が更新される
+
+4. **Firebase 匿名認証の永続化**
+   - アプリを再起動してもユーザーIDが変わらないことを確認
+   - 作成したグループが再起動後も表示されることを確認
+
+### 既知の制限
+- Expo Go ではQRスキャンは利用不可（代わりにURL入力で参加可能）
+- 課金処理は現在モック（実際の課金はApple Developer登録後に実装）
+- `Sending onAnimatedValueUpdate with no listeners registered` 警告はDateTimePicker の既知問題（機能への影響なし）

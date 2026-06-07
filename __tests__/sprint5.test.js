@@ -91,7 +91,7 @@ const members = [
   const g = group(members);
   const payments = [pay('p1', 'm2', 8000, ['m1', 'm2', 'm3'])];
   const text = buildSettlementText(g, payments);
-  assert(text.includes('【かしかり.me 精算結果】'), 'has header line');
+  assert(text.includes('【Kashikari.me 精算結果】'), 'has header line');
   assert(text.includes('グループ: 北海道旅行2026'), 'has group name');
   assert(text.includes('総支出: ¥8,000'), 'has total ¥8,000');
   assert(text.includes('1人あたり: ¥2,666'), 'has average ¥2,666');

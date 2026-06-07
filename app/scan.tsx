@@ -63,15 +63,11 @@ function DevBuildRequired({ colors, styles }: { colors: any; styles: any }) {
       <SubHeader title="QRコードを読み取る" onBack={() => router.back()} />
       <View style={styles.center}>
         <Ionicons name="construct-outline" size={52} color={colors.textSub} />
-        <Text style={styles.titleText}>Development Build が必要です</Text>
+        <Text style={styles.titleText}>QRスキャンは利用できません</Text>
         <Text style={styles.bodyText}>
-          QRスキャン機能はカメラへのネイティブアクセスが必要なため、
-          Expo Go では動作しません。{'\n\n'}
-          EAS Build で Development Build を作成してください：
+          Expo Go ではカメラへのネイティブアクセスができません。{'\n\n'}
+          招待URLでの参加はホーム画面の「グループに参加」ボタンから行えます。
         </Text>
-        <View style={styles.codeBlock}>
-          <Text style={styles.codeText}>eas build --profile development</Text>
-        </View>
         <View style={styles.backBtn}>
           <PrimaryButton label="戻る" onPress={() => router.back()} />
         </View>
@@ -216,6 +212,22 @@ function makeStyles(c: ColorPalette) {
       fontSize: 13,
       color: c.text,
       textAlign: 'center',
+    },
+    input: {
+      alignSelf: 'stretch',
+      height: 48,
+      borderWidth: 1.5,
+      borderRadius: 14,
+      paddingHorizontal: 14,
+      fontFamily: fonts.jp500,
+      fontSize: 14,
+      backgroundColor: c.surface,
+    },
+    errorText: {
+      fontFamily: fonts.jp500,
+      fontSize: 12,
+      color: c.error,
+      alignSelf: 'stretch',
     },
     backBtn: { alignSelf: 'stretch', marginTop: spacing.sm },
     cameraWrap: { flex: 1, backgroundColor: '#000', overflow: 'hidden' },

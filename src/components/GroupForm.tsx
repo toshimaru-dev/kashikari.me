@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import {
+  Alert,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -24,6 +25,7 @@ import {
 } from '@/utils/groupPresets';
 import { ColorPalette, fonts, radius, spacing } from '@/theme';
 import { useTheme } from '@/context/ThemeContext';
+import { usePurchase, FREE_MEMBER_LIMIT } from '@/context/PurchaseContext';
 
 export interface MemberDraft {
   key: string;
@@ -73,6 +75,7 @@ export function GroupForm({
   const insets = useSafeAreaInsets();
   const { colors } = useTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
+  const { isPremium } = usePurchase();
   const [name, setName] = useState(initial?.name ?? '');
   const [members, setMembers] = useState<MemberDraft[]>(() => buildInitialMembers(initial));
   const [color, setColor] = useState(initial?.color ?? DEFAULT_GROUP_COLOR);
@@ -92,6 +95,24 @@ export function GroupForm({
   };
 
   const addMember = () => {
+    const namedCount = members.filter((m) => m.name.trim().length > 0).length;
+    if (!isPremium && namedCount >= FREE_MEMBER_LIMIT) {
+      Alert.alert(
+        'メンバーの上限に達しました',
+        `無料プランは${FREE_MEMBER_LIMIT}人まで。プレミアムプランで無制限に追加できます。`,
+        [
+          { text: 'あとで', style: 'cancel' },
+          {
+            text: 'アップグレード',
+            onPress: () => {
+              const { router } = require('expo-router');
+              router.push('/paywall');
+            },
+          },
+        ]
+      );
+      return;
+    }
     setMembers((prev) => [...prev, { key: generateId(), name: '' }]);
   };
 

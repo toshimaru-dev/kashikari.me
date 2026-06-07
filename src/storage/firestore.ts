@@ -24,6 +24,7 @@ import {
   updateDoc,
   writeBatch,
   arrayUnion,
+  where,
   Timestamp,
 } from 'firebase/firestore';
 import { db } from '@/firebase/config';
@@ -144,17 +145,13 @@ export function subscribeGroups(
     onUpdate([]);
     return () => {};
   }
-  const q = query(collection(db, 'groups'));
+  const q = query(collection(db, 'groups'), where('participantIds', 'array-contains', userId));
   const unsub = onSnapshot(
     q,
     (snap) => {
       const groups: Group[] = [];
       snap.forEach((d) => {
-        const g = docToGroup(d.id, d.data() as Record<string, unknown>);
-        // クライアント側でアクセス権をフィルタ（participantIds に userId を含む or owner）
-        if (g.participantIds.includes(userId) || g.ownerId === userId) {
-          groups.push(g);
-        }
+        groups.push(docToGroup(d.id, d.data() as Record<string, unknown>));
       });
       // 新しい順
       groups.sort((a, b) => b.createdAt - a.createdAt);

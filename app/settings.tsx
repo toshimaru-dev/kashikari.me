@@ -5,9 +5,10 @@ import { Ionicons } from '@expo/vector-icons';
 import * as WebBrowser from 'expo-web-browser';
 import Constants from 'expo-constants';
 import { SubHeader } from '@/components/Header';
-import { ColorPalette, fonts, radius, spacing, themes, ThemeId } from '@/theme';
+import { ColorPalette, fonts, radius, spacing, themes, type ThemeId } from '@/theme';
 import { useTheme } from '@/context/ThemeContext';
 import { useUser } from '@/context/UserContext';
+import { usePurchase } from '@/context/PurchaseContext';
 
 /** テーマ選択カードの表示定義（順序は spec の通り） */
 const THEME_OPTIONS: { id: ThemeId; label: string }[] = [
@@ -20,8 +21,8 @@ const THEME_OPTIONS: { id: ThemeId; label: string }[] = [
 
 /** アプリ情報・お問い合わせの定数 */
 const APP_VERSION = Constants.expoConfig?.version ?? '1.0.0';
-const TERMS_URL = 'https://frisk1995.github.io/kashikari-me-beta/terms-of-use.html';
-const PRIVACY_URL = 'https://frisk1995.github.io/kashikari-me-beta/privacy-policy.html';
+const TERMS_URL = 'https://toshimaru-dev.github.io/kashikari.me/terms-of-use.html';
+const PRIVACY_URL = 'https://toshimaru-dev.github.io/kashikari.me/privacy-policy.html';
 const CONTACT_EMAIL = 'kashikari.me.26@gmail.com';
 const CONTACT_SUBJECT = '[Kashikari.me] お問い合わせ';
 
@@ -44,9 +45,10 @@ const openMail = () => {
 };
 
 export default function SettingsScreen() {
-  const { colors, themeId, shadows, setTheme } = useTheme();
+  const { colors, themeId, shadows } = useTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const { userId, username, setUsername } = useUser();
+  const { isPremium } = usePurchase();
   const [copied, setCopied] = useState(false);
 
   const copyUserId = () => {
@@ -119,66 +121,61 @@ export default function SettingsScreen() {
 
         {/* テーマカラー */}
         <Text style={[styles.sectionLabel, styles.sectionLabelSpaced]}>テーマカラー</Text>
-        <Text style={styles.sectionSub}>アプリ全体の配色を選べます</Text>
-
-        {THEME_OPTIONS.map((opt) => {
-          const palette = themes[opt.id];
-          const selected = opt.id === themeId;
-          // 各テーマの代表3色（iconTile）をサークルで表示
-          const circles = palette.iconTile.slice(0, 3);
-          return (
-            <Pressable
-              key={opt.id}
-              onPress={() => setTheme(opt.id)}
-              style={({ pressed }) => [
-                styles.card,
-                shadows.card,
-                selected ? styles.cardSelected : null,
-                { opacity: pressed ? 0.85 : 1 },
-              ]}
-              accessibilityRole="radio"
-              accessibilityState={{ selected }}
-              accessibilityLabel={`テーマ ${opt.label}`}
-            >
-              {/* テーマ代表色のプレビュー（ヘッダー背景の四角 + 3色サークル） */}
-              <View style={[styles.preview, { backgroundColor: palette.headerBg }]}>
-                <View style={styles.previewCircles}>
-                  {circles.map((color, i) => (
-                    <View
-                      key={i}
-                      style={[
-                        styles.previewCircle,
-                        { backgroundColor: color, marginLeft: i > 0 ? -6 : 0 },
-                      ]}
-                    />
-                  ))}
+        <Pressable
+          onPress={() => router.push('/theme-select')}
+          style={({ pressed }) => [styles.row, shadows.card, { opacity: pressed ? 0.85 : 1 }]}
+          accessibilityRole="button"
+          accessibilityLabel="テーマカラーを変更"
+        >
+          <View style={styles.rowIcon}>
+            <Ionicons name="color-palette-outline" size={20} color={colors.primary} />
+          </View>
+          <View style={styles.rowBody}>
+            <View style={styles.themeRowTitle}>
+              <Text style={styles.rowLabel}>テーマカラー</Text>
+              {!isPremium && (
+                <View style={[styles.premiumBadge, { backgroundColor: colors.primary + '18' }]}>
+                  <Ionicons name="star" size={10} color={colors.primary} />
+                  <Text style={[styles.premiumBadgeText, { color: colors.primary }]}>プレミアム</Text>
                 </View>
-              </View>
+              )}
+            </View>
+            <View style={styles.themePreviewRow}>
+              {themes[themeId].iconTile.map((c, i) => (
+                <View key={i} style={[styles.themeDot, { backgroundColor: c }]} />
+              ))}
+              <Text style={styles.rowValueSub}>
+                {THEME_OPTIONS.find((t) => t.id === themeId)?.label ?? themeId}
+              </Text>
+            </View>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color={colors.textSub} />
+        </Pressable>
 
-              <View style={styles.cardBody}>
-                <Text style={styles.cardLabel} numberOfLines={1}>
-                  {opt.label}
-                </Text>
-                <View style={styles.swatches}>
-                  {circles.map((color, i) => (
-                    <View key={i} style={[styles.swatch, { backgroundColor: color }]} />
-                  ))}
-                </View>
-              </View>
-
-              <View
-                style={[
-                  styles.check,
-                  selected ? styles.checkOn : styles.checkOff,
-                ]}
-              >
-                {selected ? (
-                  <Ionicons name="checkmark" size={18} color={colors.white} />
-                ) : null}
-              </View>
-            </Pressable>
-          );
-        })}
+        {/* プラン */}
+        <Text style={[styles.sectionLabel, styles.sectionLabelSpaced]}>プラン</Text>
+        <Pressable
+          onPress={() => router.push('/paywall')}
+          style={({ pressed }) => [styles.row, shadows.card, { opacity: pressed ? 0.85 : 1 }]}
+          accessibilityRole="button"
+        >
+          <View style={styles.rowIcon}>
+            <Ionicons name="star-outline" size={20} color={colors.primary} />
+          </View>
+          <View style={styles.rowBody}>
+            <Text style={styles.rowLabel}>
+              {isPremium ? 'プレミアムプラン' : 'フリープラン'}
+            </Text>
+            <Text style={styles.rowValueSub}>
+              {isPremium ? 'すべての機能が利用可能' : 'アップグレードで制限を解除'}
+            </Text>
+          </View>
+          {isPremium ? (
+            <Ionicons name="checkmark-circle" size={20} color={colors.primary} />
+          ) : (
+            <Ionicons name="chevron-forward" size={18} color={colors.textSub} />
+          )}
+        </Pressable>
 
         {/* アプリ情報 */}
         <Text style={[styles.sectionLabel, styles.sectionLabelSpaced]}>アプリ情報</Text>
@@ -271,73 +268,34 @@ function makeStyles(c: ColorPalette) {
       color: c.textSub,
       marginBottom: spacing.lg,
     },
-    card: {
+    themeRowTitle: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 14,
-      backgroundColor: c.surface,
-      borderRadius: radius.card,
-      padding: spacing.cardPad,
-      marginBottom: spacing.cardGap,
-      borderWidth: 2,
-      borderColor: 'transparent',
-    },
-    cardSelected: {
-      borderColor: c.primary,
-    },
-    preview: {
-      width: 56,
-      height: 56,
-      borderRadius: radius.iconTile,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    previewCircles: {
-      flexDirection: 'row',
-      alignItems: 'center',
-    },
-    previewCircle: {
-      width: 18,
-      height: 18,
-      borderRadius: 9,
-      borderWidth: 2,
-      borderColor: 'rgba(255,255,255,0.85)',
-    },
-    cardBody: {
-      flex: 1,
-    },
-    cardLabel: {
-      fontFamily: fonts.jp700,
-      fontSize: 15,
-      fontWeight: '700',
-      color: c.text,
-      marginBottom: 8,
-    },
-    swatches: {
-      flexDirection: 'row',
       gap: 6,
     },
-    swatch: {
-      width: 22,
-      height: 22,
-      borderRadius: 11,
-      borderWidth: 1,
-      borderColor: c.border,
-    },
-    check: {
-      width: 28,
-      height: 28,
-      borderRadius: 14,
+    premiumBadge: {
+      flexDirection: 'row',
       alignItems: 'center',
-      justifyContent: 'center',
+      gap: 3,
+      paddingHorizontal: 6,
+      paddingVertical: 2,
+      borderRadius: 99,
     },
-    checkOn: {
-      backgroundColor: c.primary,
+    premiumBadgeText: {
+      fontFamily: fonts.jp700,
+      fontSize: 10,
+      fontWeight: '700',
     },
-    checkOff: {
-      borderWidth: 1.5,
-      borderColor: c.border,
-      backgroundColor: 'transparent',
+    themePreviewRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      marginTop: 2,
+    },
+    themeDot: {
+      width: 12,
+      height: 12,
+      borderRadius: 6,
     },
     sectionLabelSpaced: {
       marginTop: spacing['2xl'],

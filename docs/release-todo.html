@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>かしかり.me — App Store リリース TODO</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', sans-serif;
+      background: #F5F5F7;
+      color: #1D1D1F;
+      padding: 40px 20px 80px;
+    }
+
+    .container {
+      max-width: 720px;
+      margin: 0 auto;
+    }
+
+    header {
+      margin-bottom: 40px;
+    }
+
+    header h1 {
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+
+    header p {
+      margin-top: 6px;
+      font-size: 14px;
+      color: #6E6E73;
+    }
+
+    .progress-bar-wrap {
+      margin-top: 16px;
+      background: #E0E0E5;
+      border-radius: 99px;
+      height: 6px;
+      overflow: hidden;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: #FF6B6B;
+      border-radius: 99px;
+      transition: width 0.4s ease;
+    }
+
+    .progress-label {
+      margin-top: 6px;
+      font-size: 12px;
+      color: #6E6E73;
+    }
+
+    .section-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #6E6E73;
+      margin: 32px 0 12px;
+    }
+
+    .task-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .task {
+      background: #FFFFFF;
+      border-radius: 16px;
+      padding: 18px 20px;
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    }
+
+    .task.done {
+      opacity: 0.55;
+    }
+
+    .task.waiting {
+      border: 1.5px solid #FF6B6B22;
+      background: #FFF8F7;
+    }
+
+    .task-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 17px;
+      flex-shrink: 0;
+    }
+
+    .icon-done    { background: #E8F5E9; }
+    .icon-waiting { background: #FFF3E0; }
+    .icon-blocked { background: #F3F3F7; }
+
+    .task-body {
+      flex: 1;
+    }
+
+    .task-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .task-num {
+      font-size: 11px;
+      font-weight: 700;
+      color: #AEAEB2;
+    }
+
+    .task-title {
+      font-size: 15px;
+      font-weight: 600;
+      line-height: 1.4;
+    }
+
+    .task.done .task-title {
+      text-decoration: line-through;
+    }
+
+    .badge {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 99px;
+      letter-spacing: 0.04em;
+    }
+
+    .badge-done    { background: #E8F5E9; color: #2E7D32; }
+    .badge-waiting { background: #FFF3E0; color: #E65100; }
+    .badge-blocked { background: #F3F3F7; color: #8E8E93; }
+    .badge-required { background: #FDECEA; color: #C62828; }
+
+    .task-desc {
+      margin-top: 6px;
+      font-size: 13px;
+      color: #6E6E73;
+      line-height: 1.6;
+    }
+
+    .blocker-note {
+      margin-top: 6px;
+      font-size: 12px;
+      color: #AEAEB2;
+    }
+
+    .blocker-note span {
+      font-weight: 600;
+    }
+
+    footer {
+      margin-top: 48px;
+      font-size: 12px;
+      color: #AEAEB2;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <header>
+      <h1>かしかり.me — App Store リリース TODO</h1>
+      <p>Apple Developer 登録完了後、順番に進める</p>
+      <div class="progress-bar-wrap">
+        <div class="progress-bar" style="width: 18%;"></div>
+      </div>
+      <p class="progress-label">2 / 11 完了</p>
+    </header>
+
+    <!-- STEP 1: 前提 -->
+    <div class="section-label">Step 1 — 前提条件</div>
+    <div class="task-list">
+
+      <div class="task done">
+        <div class="task-icon icon-done">✅</div>
+        <div class="task-body">
+          <div class="task-header">
+            <span class="task-num">#1</span>
+            <span class="task-title">Apple Developer Program 登録完了を確認する</span>
+            <span class="badge badge-done">完了</span>
+          </div>
+          <p class="task-desc">登録申請済み・審査完了待ち。完了メールを受信したら developer.apple.com でチーム設定・契約確認を行う。</p>
+        </div>
+      </div>
+
+      <div class="task done">
+        <div class="task-icon icon-done">✅</div>
+        <div class="task-body">
+          <div class="task-header">
+            <span class="task-num">#2</span>
+            <span class="task-title">Bundle ID を本番用に変更する</span>
+            <span class="badge badge-done">完了</span>
+          </div>
+          <p class="task-desc"><code>com.toshimaru.kashikarime</code> に変更済み（app.json の iOS / Android 両方）。一度 App Store に登録すると変更不可のため事前確定が必要。</p>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- STEP 2: 登録・設定 -->
+    <div class="section-label">Step 2 — App Store Connect 登録・設定</div>
+    <div class="task-list">
+
+      <div class="task waiting">
+        <div class="task-icon icon-waiting">⏳</div>
+        <div class="task-body">
+          <div class="task-header">
+            <span class="task-num">#3</span>
+            <span class="task-title">App Store Connect でアプリを登録する</span>
+            <span class="badge badge-waiting">待機中</span>
+          </div>
+          <p class="task-desc">appstoreconnect.apple.com で新規アプリを作成。設定項目: アプリ名「かしかり.me」・Bundle ID・SKU・プライマリ言語（日本語）・カテゴリ（ファイナンス）。</p>
+          <p class="blocker-note">🔒 <span>#1 Apple Developer 登録完了後</span>に実施</p>
+        </div>
+      </div>
+
+      <div class="task">
+        <div class="task-icon icon-blocked">🔒</div>
+        <div class="task-body">
+          <div class="task-header">
+            <span class="task-num">#4</span>
+            <span class="task-title">アプリアイコン・スプラッシュを本番品質に確認・修正する</span>
+            <span class="badge badge-blocked">未着手</span>
+          </div>
+          <p class="task-desc">assets/icon.png が 1024×1024px であること、背景透過なし・角丸なし（Apple 側で自動適用）を確認する。スプラッシュ画面の表示も確認。</p>
+          <p class="blocker-note">🔒 <span>#1</span> 完了後に実施</p>
+        </div>
+      </div>
+
+      <div class="task">
+        <div class="task-icon icon-blocked">🔒</div>
+        <div class="task-body">
+          <div class="task-header">
+            <span class="task-num">#5</span>
+            <span class="task-title">eas.json に production ビルドプロファイルを追加する</span>
+            <span class="badge badge-blocked">未着手</span>
+          </div>
+          <p class="task-desc">eas.json の build に production プロファイルを追加（distribution: "store"）。<code>eas credentials</code> で証明書・プロビジョニングプロファイルを自動取得する。</p>
+          <p class="blocker-note">🔒 <span>#1</span> 完了後に実施</p>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- STEP 3: 実装 -->
+    <div class="section-label">Step 3 — 実装（必須）</div>
+    <div class="task-list">
+
+      <div class="task">
+        <div class="task-icon icon-blocked">🔒</div>
+        <div class="task-body">
+          <div class="task-header">
+            <span class="task-num">#6</span>
+            <span class="task-title">課金機能を RevenueCat 本番実装に切り替える</span>
+            <span class="badge badge-blocked">未着手</span>
+            <span class="badge badge-required">必須</span>
+          </div>
+          <p class="task-desc">現在は AsyncStorage モックのためリリース不可。① App Store Connect でサブスクリプション商品作成（¥300/月）、② RevenueCat アカウント設定、③ react-native-purchases 実装、④ PurchaseContext の TODO 箇所を差し替え。</p>
+          <p class="blocker-note">🔒 <span>#1, #3</span> 完了後に実施</p>
+        </div>
+      </div>
+
+      <div class="task">
+        <div class="task-icon icon-blocked">🔒</div>
+        <div class="task-body">
+          <div class="task-header">
+            <span class="task-num">#9</span>
+            <span class="task-title">Firebase App Check を導入する</span>
+            <span class="badge badge-blocked">未着手</span>
+          </div>
+          <p class="task-desc">Apple Developer の DeviceCheck Key を作成し、Firebase コンソールで App Check を強制モードに設定。正規アプリ以外からの不正な API アクセスをブロックできる。</p>
+          <p class="blocker-note">🔒 <span>#1</span> 完了後に実施</p>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- STEP 4: コンテンツ -->
+    <div class="section-label">Step 4 — ストアコンテンツ準備</div>
+    <div class="task-list">
+
+      <div class="task">
+        <div class="task-icon icon-blocked">🔒</div>
+        <div class="task-body">
+          <div class="task-header">
+            <span class="task-num">#7</span>
+            <span class="task-title">App Store メタデータを作成する</span>
+            <span class="badge badge-blocked">未着手</span>
+          </div>
+          <p class="task-desc">① 説明文（4000文字以内・日本語）、② キーワード（100文字・「割り勘 立替 精算」など）、③ サポートURL、④ プライバシーポリシーURL（GitHub Pages）、⑤ 年齢制限（4+）。</p>
+          <p class="blocker-note">🔒 <span>#3</span> 完了後に実施</p>
+        </div>
+      </div>
+
+      <div class="task">
+        <div class="task-icon icon-blocked">🔒</div>
+        <div class="task-body">
+          <div class="task-header">
+            <span class="task-num">#8</span>
+            <span class="task-title">スクリーンショットを撮影・準備する</span>
+            <span class="badge badge-blocked">未着手</span>
+          </div>
+          <p class="task-desc">必須: 6.7インチ（iPhone 15 Pro Max）。推奨: 6.5インチ・5.5インチも用意。各サイズ最低3枚。Xcode シミュレーターで撮影可能。主要画面（ホーム・グループ詳細・精算）を用意する。</p>
+          <p class="blocker-note">🔒 <span>#4</span> 完了後に実施</p>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- STEP 5: テスト・申請 -->
+    <div class="section-label">Step 5 — テスト・申請</div>
+    <div class="task-list">
+
+      <div class="task">
+        <div class="task-icon icon-blocked">🔒</div>
+        <div class="task-body">
+          <div class="task-header">
+            <span class="task-num">#10</span>
+            <span class="task-title">TestFlight でベータテストを実施する</span>
+            <span class="badge badge-blocked">未着手</span>
+          </div>
+          <p class="task-desc"><code>eas build --platform ios --profile production</code> で本番ビルドを作成し TestFlight にアップロード。実機で動作・課金フロー・Firebase 連携を確認する。</p>
+          <p class="blocker-note">🔒 <span>#5, #6</span> 完了後に実施</p>
+        </div>
+      </div>
+
+      <div class="task">
+        <div class="task-icon icon-blocked">🔒</div>
+        <div class="task-body">
+          <div class="task-header">
+            <span class="task-num">#11</span>
+            <span class="task-title">App Store に申請する</span>
+            <span class="badge badge-blocked">未着手</span>
+          </div>
+          <p class="task-desc">App Store Connect で審査情報を入力して申請。審査用メモに「匿名ログインのため Demo アカウント不要」と記載する。通常1〜3日で審査結果。</p>
+          <p class="blocker-note">🔒 <span>#7, #8, #10</span> 完了後に実施</p>
+        </div>
+      </div>
+
+    </div>
+
+    <footer>
+      かしかり.me — App Store リリース計画 &nbsp;·&nbsp; 最終更新: 2026-06-05
+    </footer>
+
+  </div>
+</body>
+</html>

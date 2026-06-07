@@ -1,7 +1,9 @@
 import React, { useMemo, useState } from 'react';
 import {
   KeyboardAvoidingView,
+  Modal,
   Platform,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -9,6 +11,8 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
+import DateTimePicker, { type DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { SubHeader } from './Header';
 import { TextField } from './TextField';
 import { PayerSelector, SplitSelector } from './MemberSelector';
@@ -61,9 +65,15 @@ export function PaymentForm({ mode, group, initial, onSave, onCancel, onDelete }
   );
   const [lenderId, setLenderId] = useState<string | null>(initial?.lenderId ?? null);
   const [memo, setMemo] = useState<string>(initial?.memo ?? '');
-  const [dateText, setDateText] = useState<string>(
-    initial?.date && isValidDateString(initial.date) ? initial.date : toDateString()
-  );
+  const [date, setDate] = useState<Date>(() => {
+    if (initial?.date && isValidDateString(initial.date)) {
+      const [y, m, d] = initial.date.split('-').map(Number);
+      return new Date(y, m - 1, d);
+    }
+    return new Date();
+  });
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [tempDate, setTempDate] = useState<Date>(date);
 
   const [borrowerIds, setBorrowerIds] = useState<string[]>(
     initial?.borrowerIds ?? []
@@ -129,10 +139,7 @@ export function PaymentForm({ mode, group, initial, onSave, onCancel, onDelete }
 
     if (!valid || !lenderId) return;
 
-    // 空または不正な日付は今日の日付にフォールバック（仕様: 空でも保存可能）
-    const normalizedDate = isValidDateString(dateText.trim())
-      ? dateText.trim()
-      : toDateString();
+    const normalizedDate = toDateString(date);
 
     onSave({
       amount: amountValue,
@@ -188,28 +195,36 @@ export function PaymentForm({ mode, group, initial, onSave, onCancel, onDelete }
           <View style={styles.field}>
             <Text style={styles.label}>借りた日付</Text>
             {Platform.OS === 'web' ? (
-              // Web ではネイティブのカレンダー UI を使う
               React.createElement('input', {
                 type: 'date',
-                value: dateText,
+                value: toDateString(date),
                 max: toDateString(),
-                onChange: (e: { target: { value: string } }) =>
-                  setDateText(e.target.value),
+                onChange: (e: { target: { value: string } }) => {
+                  const v = e.target.value;
+                  if (isValidDateString(v)) {
+                    const [y, m, d] = v.split('-').map(Number);
+                    setDate(new Date(y, m - 1, d));
+                  }
+                },
                 style: webDateInputStyle,
                 'aria-label': '借りた日付',
               })
             ) : (
-              <TextInput
-                value={dateText}
-                onChangeText={setDateText}
-                placeholder="YYYY-MM-DD"
-                placeholderTextColor={colors.textSub}
-                style={styles.dateInput}
-                autoCapitalize="none"
-                autoCorrect={false}
-                keyboardType="numbers-and-punctuation"
-                accessibilityLabel="借りた日付"
-              />
+              <Pressable
+                onPress={() => { setTempDate(date); setShowDatePicker(true); }}
+                style={({ pressed }) => [
+                  styles.dateBtn,
+                  { opacity: pressed ? 0.8 : 1, borderColor: colors.border, backgroundColor: colors.surface },
+                ]}
+                accessibilityRole="button"
+                accessibilityLabel="日付を選択"
+              >
+                <Ionicons name="calendar-outline" size={18} color={colors.primary} />
+                <Text style={[styles.dateBtnText, { color: colors.text }]}>
+                  {`${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`}
+                </Text>
+                <Ionicons name="chevron-forward" size={16} color={colors.textSub} />
+              </Pressable>
             )}
           </View>
 
@@ -242,6 +257,47 @@ export function PaymentForm({ mode, group, initial, onSave, onCancel, onDelete }
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      {/* 日付選択モーダル（iOS / Android 共通） */}
+      {Platform.OS !== 'web' && (
+        <Modal
+          visible={showDatePicker}
+          transparent
+          animationType="slide"
+          onRequestClose={() => setShowDatePicker(false)}
+        >
+          <Pressable style={styles.modalOverlay} onPress={() => setShowDatePicker(false)} />
+          <View style={[styles.modalSheet, { backgroundColor: colors.surface }]}>
+            <View style={[styles.modalHandle, { backgroundColor: colors.border }]} />
+            <Text style={[styles.modalTitle, { color: colors.text }]}>借りた日付を選択</Text>
+            <DateTimePicker
+              value={tempDate}
+              mode="date"
+              display={Platform.OS === 'ios' ? 'inline' : 'calendar'}
+              maximumDate={new Date()}
+              locale="ja"
+              onChange={(_e: DateTimePickerEvent, selected?: Date) => {
+                if (selected) setTempDate(selected);
+                if (Platform.OS === 'android') {
+                  setDate(selected ?? tempDate);
+                  setShowDatePicker(false);
+                }
+              }}
+              style={styles.modalPicker}
+              accentColor={colors.primary}
+              themeVariant={colors.bg === '#121212' ? 'dark' : 'light'}
+            />
+            {Platform.OS === 'ios' && (
+              <Pressable
+                onPress={() => { setDate(tempDate); setShowDatePicker(false); }}
+                style={({ pressed }) => [styles.modalConfirm, { backgroundColor: colors.primary, opacity: pressed ? 0.85 : 1 }]}
+              >
+                <Text style={[styles.modalConfirmText, { color: colors.white }]}>決定</Text>
+              </Pressable>
+            )}
+          </View>
+        </Modal>
+      )}
     </View>
   );
 }
@@ -272,16 +328,60 @@ function makeStyles(c: ColorPalette) {
       flex: 1,
       backgroundColor: c.bg,
     },
-    dateInput: {
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0,0,0,0.4)',
+    },
+    modalSheet: {
+      paddingHorizontal: spacing.screenH,
+      paddingBottom: 32,
+      paddingTop: 12,
+      borderTopLeftRadius: 24,
+      borderTopRightRadius: 24,
+      alignItems: 'center',
+    },
+    modalHandle: {
+      width: 40,
+      height: 4,
+      borderRadius: 2,
+      marginBottom: 16,
+    },
+    modalTitle: {
+      fontFamily: fonts.jp700,
+      fontSize: 16,
+      fontWeight: '700',
+      marginBottom: 8,
+      alignSelf: 'flex-start',
+    },
+    modalPicker: {
+      alignSelf: 'stretch',
+    },
+    modalConfirm: {
+      alignSelf: 'stretch',
+      height: 52,
+      borderRadius: radius.button,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginTop: 8,
+    },
+    modalConfirmText: {
+      fontFamily: fonts.jp700,
+      fontSize: 16,
+      fontWeight: '700',
+    },
+    dateBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
       height: 52,
       borderRadius: radius.input,
       borderWidth: 1.5,
-      borderColor: c.border,
-      backgroundColor: c.surface,
       paddingHorizontal: 16,
+    },
+    dateBtnText: {
+      flex: 1,
       fontFamily: fonts.jp500,
       fontSize: 16,
-      color: c.text,
     },
     flex: {
       flex: 1,

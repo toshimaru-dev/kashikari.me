@@ -14,7 +14,7 @@
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "me.kashikari.beta",
+      "bundleIdentifier": "com.toshimaru.kashikarime",
       "buildNumber": "1",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
@@ -25,7 +25,7 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#FFF8F2"
       },
-      "package": "me.kashikari.beta",
+      "package": "com.toshimaru.kashikarime",
       "versionCode": 1
     },
     "web": {
@@ -41,7 +41,8 @@
         {
           "cameraPermission": "グループメンバーを招待するためにカメラを使用します。"
         }
-      ]
+      ],
+      "@react-native-community/datetimepicker"
     ],
     "experiments": {
       "typedRoutes": true

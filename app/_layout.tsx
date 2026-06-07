@@ -18,6 +18,7 @@ import {
 } from '@expo-google-fonts/baloo-2';
 import { ThemeProvider, useTheme } from '@/context/ThemeContext';
 import { UserProvider, useUser } from '@/context/UserContext';
+import { PurchaseProvider } from '@/context/PurchaseContext';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
@@ -46,6 +47,7 @@ function ThemedStack() {
           <Stack.Screen name="onboarding" />
           <Stack.Screen name="index" />
           <Stack.Screen name="settings" options={{ presentation: 'modal' }} />
+          <Stack.Screen name="theme-select" options={{ presentation: 'modal' }} />
           <Stack.Screen name="group/new" options={{ presentation: 'modal' }} />
           <Stack.Screen name="group/[id]/index" />
           <Stack.Screen name="group/[id]/edit" options={{ presentation: 'modal' }} />
@@ -57,6 +59,7 @@ function ThemedStack() {
           />
           <Stack.Screen name="scan" options={{ presentation: 'modal' }} />
           <Stack.Screen name="join/[groupId]" />
+          <Stack.Screen name="paywall" options={{ presentation: 'modal' }} />
         </Stack>
       </View>
     </>
@@ -100,7 +103,9 @@ export default function RootLayout() {
       <SafeAreaProvider initialMetrics={initialWindowMetrics}>
         <ThemeProvider>
           <UserProvider>
-            <ThemedStack />
+            <PurchaseProvider>
+              <ThemedStack />
+            </PurchaseProvider>
           </UserProvider>
         </ThemeProvider>
       </SafeAreaProvider>
